@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
     private boolean _animatorMode = false;
     private List<Path> _animatorPathList = null;
     private List<Integer> _animatorColorList = null;
+    private final ValueAnimator _drawingAnimator = new ValueAnimator();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -140,6 +141,7 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
                 saveToFile();
                 //_drawingView.clearCanvas();
                 convertToPathAndDraw(Gallery.getInstance().getDrawing(_currentDrawingIndex));
+                drawingNumberView.setText("" + (_currentDrawingIndex + 1));
             }
         });
 
@@ -186,7 +188,7 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
             pathList.add(linePath);
             colorList.add(strokeColor);
         }
-        if (!_animatorMode) {
+        if (!_drawingAnimator.isRunning()) {
             drawConvertedDrawing(pathList, colorList);
         }
         _animatorPathList = new ArrayList<>(pathList);
@@ -254,18 +256,12 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
     }
 
     private void animate() {
-        ValueAnimator animation = new ValueAnimator();
-        animation.setDuration(5000); //set duration for 5 seconds
-        animation.setIntValues(0, Gallery.getInstance().getDrawing(_currentDrawingIndex).getStrokeCount() - 1);
-        animation.addUpdateListener(this);
+        _drawingAnimator.setDuration(5000); //set duration for 5 seconds
+        _drawingAnimator.setIntValues(0, Gallery.getInstance().getDrawing(_currentDrawingIndex).getStrokeCount() - 1);
+        _drawingAnimator.addUpdateListener(this);
         _drawingView.clearCanvas();
-        animation.start();
-        if (animation.isRunning()) {
-            _animatorMode = true;
-        }
-        else {
-            _animatorMode = false;
-        }
+        _drawingAnimator.start();
+
     }
 
     @Override
@@ -274,5 +270,12 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
         Log.i("Animation", "Current Animation value: " + animationValue);
 
         _drawingView.drawNewPath(_animatorPathList.get(animationValue), _animatorColorList.get(animationValue));
+        //TODO: fix this. it's causing the animated picture to stay the picture always. see line 190 for reference
+        if (valueAnimator.isRunning()) {
+            _animatorMode = true;
+        }
+        else {
+            _animatorMode = false;
+        }
     }
 }
