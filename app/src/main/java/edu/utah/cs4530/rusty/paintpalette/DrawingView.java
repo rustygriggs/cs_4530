@@ -22,8 +22,8 @@ public class DrawingView extends View {
     }
 
     public void drawNewPath(Path linePath, int strokeColor) {
-        _linePath = linePath;
-        _paintColor = strokeColor;
+        _pathList.add(linePath);
+        _colorList.add(strokeColor);
         invalidate();
     }
 
@@ -46,7 +46,7 @@ public class DrawingView extends View {
     }
 
     public interface OnPathEndedListener {
-        void onPathEnded(List<PointF> points, int paintColor);
+        void onPathEnded(List<PointF> points, int paintColor, Path path);
     }
 
     //concurrent arrays to store the paths and colors together
@@ -99,7 +99,7 @@ public class DrawingView extends View {
 
         if (event.getAction() == MotionEvent.ACTION_UP) {
             if (_onPathEndedListener != null) {
-                _onPathEndedListener.onPathEnded(_points, _paintColor);
+                _onPathEndedListener.onPathEnded(_points, _paintColor, _linePath);
             }
             _points.clear();
         }

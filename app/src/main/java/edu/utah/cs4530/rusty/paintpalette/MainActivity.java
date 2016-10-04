@@ -105,7 +105,7 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
 
         rootLayout.addView(_drawingView, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 5));
 
-        _drawingView.manualInvalidate(); //TODO: somehow get the screen to show up on the first opening of the app
+        //_drawingView.manualInvalidate(); //TODO: somehow get the screen to show up on the first opening of the app
 
         _drawingView.setOnPathEndedListener(this);
 
@@ -225,7 +225,7 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
     }
 
     @Override
-    public void onPathEnded(List<PointF> points, int paintColor) {
+    public void onPathEnded(List<PointF> points, int paintColor, Path linePath) {
         Log.i("Path Ended", "There are " + points.size() + " points in this line. Color is " + paintColor);
         Stroke stroke = new Stroke();
         for (PointF pathPoint : points) {
@@ -237,6 +237,8 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
         }
         stroke.setColor(paintColor);
         Gallery.getInstance().addStrokeToDrawing(_currentDrawingIndex, stroke);
+        _animatorPathList.add(linePath);
+        _animatorColorList.add(paintColor);
         saveToFile();
     }
 
@@ -258,11 +260,11 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
         animation.addUpdateListener(this);
         _drawingView.clearCanvas();
         animation.start();
-        if (!animation.isRunning()) {
-            _animatorMode = false;
+        if (animation.isRunning()) {
+            _animatorMode = true;
         }
         else {
-            _animatorMode = true;
+            _animatorMode = false;
         }
     }
 
