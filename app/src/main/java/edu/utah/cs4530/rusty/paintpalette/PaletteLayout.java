@@ -15,16 +15,25 @@ import java.util.List;
 
 /**
  * Created by Rusty on 9/15/2016.
+ *
+ * Custom view that shows an oval of colors where the user can pick a color to draw with.
  */
 public class PaletteLayout extends ViewGroup implements SplotchView.OnSplotchSelectedListener {
     List<SplotchView> _splotchList;
     OnColorChangedListener _colorChangedListener = null;
 
+    /**
+     * public constructor
+     * @param context
+     */
     public PaletteLayout(Context context) {
         super(context);
         _splotchList = new ArrayList<>();
     }
 
+    /**
+     * Removes a splotch from the layout.
+     */
     public void removeSplotch() {
         for (int i  = 0; i < _splotchList.size(); i++) {
             SplotchView splotchView = _splotchList.get(i);
@@ -35,14 +44,25 @@ public class PaletteLayout extends ViewGroup implements SplotchView.OnSplotchSel
         }
     }
 
+    /**
+     * listener for when the color changes.
+     */
     public interface OnColorChangedListener {
         void onColorChanged(int splotchColor);
     }
 
+    /**
+     * setter fo the OnColorChangedListener.
+     * @param listener
+     */
     public void setOnColorChangedListener(OnColorChangedListener listener) {
         _colorChangedListener = listener;
     }
 
+    /**
+     * adds a splotch to the palette.
+     * @param splotchColor
+     */
     public void addSplotch(int splotchColor) {
         SplotchView splotchView = new SplotchView(getContext());
         splotchView.setSplotchColor(splotchColor);
@@ -91,6 +111,11 @@ public class PaletteLayout extends ViewGroup implements SplotchView.OnSplotchSel
         }
     }
 
+    /**
+     * listener for when the splotch is selected.
+     * @param splotchColor
+     * @param splotchView
+     */
     @Override
     public void onSplotchSelected(int splotchColor, SplotchView splotchView) {
         for (SplotchView splotch : _splotchList) {

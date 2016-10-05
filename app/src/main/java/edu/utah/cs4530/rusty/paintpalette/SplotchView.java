@@ -10,6 +10,8 @@ import android.view.View;
 
 /**
  * Created by Rusty on 9/12/2016.
+ *
+ * Custom view that shows a splotch of color.
  */
 public class SplotchView extends View {
 

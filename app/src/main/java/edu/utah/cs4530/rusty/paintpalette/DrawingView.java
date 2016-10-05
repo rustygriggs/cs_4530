@@ -2,11 +2,9 @@ package edu.utah.cs4530.rusty.paintpalette;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -15,36 +13,48 @@ import java.util.List;
 
 /**
  * Created by Rusty Griggs on 9/16/2016.
+ *
+ * The view where you can draw with your finger and it is drawn on the screen.
  */
 public class DrawingView extends View {
     public DrawingView(Context context) {
         super(context);
     }
 
+    /**
+     * Adds a path to the current drawing.
+     * @param linePath is the path to be drawn.
+     * @param strokeColor is the color in which the path will be drawn.
+     */
     public void drawNewPath(Path linePath, int strokeColor) {
         _pathList.add(linePath);
         _colorList.add(strokeColor);
         invalidate();
     }
 
+    /**
+     * This method will draw a new drawing.
+     * @param pathList is the list of paths to be drawn.
+     * @param colorList is the list of colors associated with each path to be drawn.
+     */
     public void drawNewDrawing(List<Path> pathList, List<Integer> colorList) {
         _pathList = pathList;
         _colorList = colorList;
         invalidate();
     }
 
-    public void manualInvalidate() {
-        invalidate();
-    }
-
+    /**
+     * This method will create a blank canvas with which to draw.
+     */
     public void clearCanvas() {
         _pathList.clear();
-        _pathList.add(new Path());
         _colorList.clear();
-        _colorList.add(Color.WHITE);
         invalidate();
     }
 
+    /**
+     * Listener for when the path ends.
+     */
     public interface OnPathEndedListener {
         void onPathEnded(List<PointF> points, int paintColor, Path path);
     }
@@ -56,10 +66,18 @@ public class DrawingView extends View {
     int _paintColor;
     List<PointF> _points = new ArrayList<>();
 
+    /**
+     * getter for the OnPathEndedListener
+     * @return
+     */
     public OnPathEndedListener getOnPathEndedListener() {
         return _onPathEndedListener;
     }
 
+    /**
+     * Setter for the OnPathEndedListener
+     * @param _onPathEndedListener
+     */
     public void setOnPathEndedListener(OnPathEndedListener _onPathEndedListener) {
         this._onPathEndedListener = _onPathEndedListener;
     }
@@ -78,6 +96,11 @@ public class DrawingView extends View {
         super.onDraw(canvas);
     }
 
+    /**
+     * Called whenever the user touches the screen. Most of the logic for drawing paths is found here.
+     * @param event
+     * @return
+     */
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         float touchPointX = event.getX();
@@ -108,6 +131,10 @@ public class DrawingView extends View {
         return true;
     }
 
+    /**
+     * Will set the active color with which to draw the paths.
+     * @param paintColor
+     */
     public void setActiveColor(int paintColor) {
         _paintColor = paintColor;
     }

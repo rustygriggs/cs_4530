@@ -8,14 +8,12 @@ import android.graphics.Path;
 import android.graphics.PointF;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -25,8 +23,11 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements SplotchView.OnSplotchSelectedListener,
-                                                               Button.OnClickListener,
+/**
+ * This class is the main controller for the program that interacts with the Data model (Gallery)
+ * and the View(s).
+ */
+public class MainActivity extends AppCompatActivity implements Button.OnClickListener,
                                                                DrawingView.OnPathEndedListener,
                                                                ValueAnimator.AnimatorUpdateListener {
 
@@ -35,19 +36,20 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
     public static final String PAINT_PALETTE_FILE_NAME = "paint_palette_file.dat";
 
     DrawingView _drawingView = null;
-    //SplotchView _colorButton = null;
     private int _currentDrawingIndex = 0;
-    private boolean _animatorMode = false;
     private List<Path> _animatorPathList = null;
     private List<Integer> _animatorColorList = null;
     private final ValueAnimator _drawingAnimator = new ValueAnimator();
     private  Button _backButton;
     private  Button _forwardButton;
     private  Button _animationButton;
-    private ImageButton _colorButton;
+    private  ImageButton _colorButton;
     private  ImageButton _deleteDrawingButton;
 
-
+    /**
+     * This method is called when the activity is first created.
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,7 +63,6 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
         LinearLayout rootLayout = new LinearLayout(this);
         rootLayout.setOrientation(LinearLayout.HORIZONTAL);
         setContentView(rootLayout);
-
 
         _backButton = new Button(this);
         _backButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 50);
@@ -84,13 +85,10 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
         _animationButton = new Button(this);
         _animationButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 50);
         _animationButton.setText("►");
-        //SplotchView _colorButton = new SplotchView(this);
-        //_colorButton.setOnSplotchSelectedListener(this);
 
         _colorButton = new ImageButton(this);
         _colorButton.setBackgroundColor(Color.BLACK);
         _colorButton.setOnClickListener(this);
-        //_colorButton.setSplotchColor(Color.BLACK);
 
         _deleteDrawingButton = new ImageButton(this);
         _deleteDrawingButton.setImageResource(R.drawable.small_trash_icon);
@@ -114,15 +112,11 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
 
         rootLayout.addView(_drawingView, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 5));
 
-        //_drawingView.manualInvalidate(); //TODO: somehow get the screen to show up on the first opening of the app
-
         _drawingView.setOnPathEndedListener(this);
 
         _forwardButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //TODO: don't add new drawing here...I think
-                //Gallery.getInstance().addNewDrawing();
                 _backButton.setEnabled(true);
                 _currentDrawingIndex++;
                 if (_currentDrawingIndex == Gallery.getInstance().getDrawingCount()) {// if the next drawing isn't drawn yet...
@@ -177,6 +171,25 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
 
     }
 
+    /**
+     * This method will save the Gallery to disk using a Serializable fileStream
+     */
+    void saveToFile() {
+        try {
+            FileOutputStream fos = openFileOutput(PAINT_PALETTE_FILE_NAME, MODE_PRIVATE);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(Gallery.getInstance());
+            oos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * This method extracts a Gallery from a file saved to disk.
+     * @param paintPaletteFileName is the file name where the Gallery is saved.
+     * @return the Gallery that was previously saved to disk.
+     */
     private Gallery loadFromFile(String paintPaletteFileName) {
         Gallery gallery = null;
         try {
@@ -191,6 +204,11 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
         return gallery;
     }
 
+    /**
+     * This converts the drawings saved in the Gallery as a series of strokes to Paths which can
+     * be understood by the drawingView.
+     * @param currentDrawing is the currentDrawing to be converted and drawn on the screen.
+     */
     private void convertToPathAndDraw(Drawing currentDrawing) {
         List<Path> pathList = new ArrayList<>();
         List<Integer> colorList = new ArrayList<>();
@@ -220,13 +238,24 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
         _animatorColorList = new ArrayList<>(colorList);
     }
 
+    /**
+     * This method is invoked when the _colorButton is clicked.
+     * @param view
+     */
     @Override
     public void onClick(View view) {
         Intent showPaintPicker = new Intent();
         showPaintPicker.setClass(this, PaintPickerActivity.class);
-        startActivityForResult(showPaintPicker, PICK_PAINT_REQUEST); //not sure what the second param is supposed to be
+        startActivityForResult(showPaintPicker, PICK_PAINT_REQUEST);
     }
 
+    /**
+     * This method is invoked when the PaintPickerActivity is killed and the results, the color
+     * that was chosen by the user, are extracted.
+     * @param requestCode should be the same as when the request was made.
+     * @param resultCode should be OK if all went well.
+     * @param data contains the color as an intExtra.
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -237,41 +266,30 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
                 _colorButton.setBackgroundColor(splotchColor);
             }
         }
-
     }
 
-    @Override
-    public void onSplotchSelected(int splotchColor, SplotchView splotchView) {
-        Intent showPaintPicker = new Intent();
-        showPaintPicker.setClass(this, PaintPickerActivity.class);
-        startActivityForResult(showPaintPicker, PICK_PAINT_REQUEST); //not sure what the second param is supposed to be
-    }
-
+    /**
+     * This listener method is called whenever a path being drawn is finshed. It will convert the Path
+     * to a Stroke and add it to the drawing.
+     * @param points is the list of points to be converted.
+     * @param paintColor is the color associated with the path/stroke.
+     * @param linePath is the path to be converted, also added to the animator path list.
+     */
     @Override
     public void onPathEnded(List<PointF> points, int paintColor, Path linePath) {
-        //todo: create a new drawing here, and not on the forward button...
         if (_currentDrawingIndex == Gallery.getInstance().getDrawingCount()) {
             Gallery.getInstance().addNewDrawing();
             _forwardButton.setEnabled(true);
             _deleteDrawingButton.setEnabled(true);
         }
-        Log.i("Path Ended", "There are " + points.size() + " points in this line. Color is " + paintColor);
+
         Stroke stroke = new Stroke();
-        int density = getResources().getConfiguration().densityDpi;
-        int screenHeight = getResources().getConfiguration().screenHeightDp * density;
-        int screenWidth = getResources().getConfiguration().screenWidthDp * density;
-        int dpHeight = (int) (screenHeight / Resources.getSystem().getDisplayMetrics().density);
-        int dpWidth = (int) (screenWidth / Resources.getSystem().getDisplayMetrics().density);
-        Log.i("screen dimensions", "Height: " + dpHeight + ". Width: " + dpWidth + ". Density: " + density);
+
         for (PointF pathPoint : points) {
             edu.utah.cs4530.rusty.paintpalette.Point strokePoint = new Point();
-            // TODO: convert coordinate  - should be in inches and stuff, not pixels
-
-
             strokePoint.x = pathPoint.x / Resources.getSystem().getDisplayMetrics().density;
             strokePoint.y = pathPoint.y / Resources.getSystem().getDisplayMetrics().density;
             stroke.addPoint(strokePoint);
-            Log.i("coordinates", "Coordinates are " + strokePoint.x + ", " + strokePoint.y);
         }
         stroke.setColor(paintColor);
         Gallery.getInstance().addStrokeToDrawing(_currentDrawingIndex, stroke);
@@ -284,49 +302,26 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
         saveToFile();
     }
 
-    void saveToFile() {
-        try {
-            FileOutputStream fos = openFileOutput(PAINT_PALETTE_FILE_NAME, MODE_PRIVATE);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(Gallery.getInstance());
-            oos.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
+    /**
+     * This method will animate the current drawing. It shows each stroke being drawn over a series
+     * of 5 seconds.
+     */
     private void animate() {
         _drawingAnimator.setDuration(5000); //set duration for 5 seconds
         _drawingAnimator.setIntValues(0, Gallery.getInstance().getDrawing(_currentDrawingIndex).getStrokeCount() - 1);
         _drawingAnimator.addUpdateListener(this);
         _drawingView.clearCanvas();
         _drawingAnimator.start();
-        disableButtonsAndViews();
-        enableButtonsAndViews();
     }
 
-    private void enableButtonsAndViews() {
-        _forwardButton.setEnabled(true);
-        _backButton.setEnabled(true);
-        _colorButton.setEnabled(true);
-        _deleteDrawingButton.setEnabled(true);
-        _drawingView.setEnabled(true);
-        _animationButton.setText("►");
-    }
-
-    private void disableButtonsAndViews() {
-        _forwardButton.setEnabled(false);
-        _backButton.setEnabled(false);
-        _colorButton.setEnabled(false);
-        _deleteDrawingButton.setEnabled(false);
-        _drawingView.setEnabled(false);
-        _animationButton.setText("◼");
-    }
-
+    /**
+     * This is the listener for the animate() method. Whenever the valueAnimator is invoked, this
+     * method is called.
+     * @param valueAnimator is how you get the animation value.
+     */
     @Override
     public void onAnimationUpdate(ValueAnimator valueAnimator) {
         int animationValue = (int) valueAnimator.getAnimatedValue();
-        Log.i("Animation", "Current Animation value: " + animationValue);
 
         _drawingView.drawNewPath(_animatorPathList.get(animationValue), _animatorColorList.get(animationValue));
     }

@@ -6,12 +6,13 @@ import java.util.List;
 
 /**
  * Created by Rusty on 10/2/2016.
+ *
+ * Represents a list of points and color that is a stroke to be drawn.
  */
 public class Stroke implements Serializable{
 
     List<Point> _points = new ArrayList<>();
     int _color = 0xFF000000; //Black (opaque)
-
 
     int getPointCount() {
         return _points.size();

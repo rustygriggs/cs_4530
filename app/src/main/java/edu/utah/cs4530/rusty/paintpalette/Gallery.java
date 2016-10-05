@@ -6,19 +6,29 @@ import java.util.List;
 
 /**
  * Created by Rusty on 9/29/2016.
+ *
+ * Data model singleton class that holds a list of drawings to be accessed by the MainActivity
+ * controller.
  */
 public class Gallery implements Serializable{
     //Singleton class
     private static Gallery _instance;
 
+    /**
+     * Used to get the one instance of this class.
+     * @return the single instance of Gallery that has been instantiated.
+     */
     public static Gallery getInstance() {
-        //TODO: thread safe?
         if (_instance == null) {
             _instance = new Gallery();
         }
         return _instance;
     }
 
+    /**
+     * setter for the Gallery.
+     * @param gallery
+     */
     public static void setInstance(Gallery gallery) {
         _instance = gallery;
     }

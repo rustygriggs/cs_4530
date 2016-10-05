@@ -10,6 +10,8 @@ import android.view.MotionEvent;
 
 /**
  * Created by Rusty on 9/16/2016.
+ *
+ * A custom control that shows a circular knob that can be controlled.
  */
 public class KnobView extends android.view.View{
 

@@ -9,6 +9,9 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
+/**
+ * The activity where the paintPalette is shown and the user can pick a color with which to draw.
+ */
 public class PaintPickerActivity extends AppCompatActivity implements PaletteLayout.OnColorChangedListener{
 
     @Override
@@ -94,9 +97,12 @@ public class PaintPickerActivity extends AppCompatActivity implements PaletteLay
 
     }
 
+    /**
+     * Sets the result of the activity to be the current color that is selected.
+     * @param splotchColor is the current color selected.
+     */
     @Override
     public void onColorChanged(int splotchColor) {
-        //TODO: set active color to be returned to the mainActivity
         Intent returnSplotchColor = new Intent();
         returnSplotchColor.putExtra(MainActivity.SPLOTCH_COLOR, splotchColor);
         setResult(RESULT_OK, returnSplotchColor);

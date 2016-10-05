@@ -6,6 +6,8 @@ import java.util.List;
 
 /**
  * Created by Rusty on 9/29/2016.
+ *
+ * Holds a list of strokes which constitutes a drawing.
  */
 public class Drawing implements Serializable{
 
