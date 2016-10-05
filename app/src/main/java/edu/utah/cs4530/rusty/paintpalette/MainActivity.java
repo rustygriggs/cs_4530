@@ -2,6 +2,7 @@ package edu.utah.cs4530.rusty.paintpalette;
 
 import android.animation.ValueAnimator;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.PointF;
@@ -12,6 +13,7 @@ import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -33,12 +35,18 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
     public static final String PAINT_PALETTE_FILE_NAME = "paint_palette_file.dat";
 
     DrawingView _drawingView = null;
-    SplotchView _colorButton = null;
+    //SplotchView _colorButton = null;
     private int _currentDrawingIndex = 0;
     private boolean _animatorMode = false;
     private List<Path> _animatorPathList = null;
     private List<Integer> _animatorColorList = null;
     private final ValueAnimator _drawingAnimator = new ValueAnimator();
+    private  Button _backButton;
+    private  Button _forwardButton;
+    private  Button _animationButton;
+    private ImageButton _colorButton;
+    private  ImageButton _deleteDrawingButton;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,49 +62,47 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
         rootLayout.setOrientation(LinearLayout.HORIZONTAL);
         setContentView(rootLayout);
 
-        final TextView drawingNumberView = new TextView(this);
-        drawingNumberView.setText("1");
 
+        _backButton = new Button(this);
+        _backButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 50);
+        _backButton.setText("←");
 
-        final Button backButton = new Button(this);
-        backButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 50);
-        backButton.setText("←");
-
-        final Button forwardButton = new Button(this);
-        forwardButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 50);
-        forwardButton.setText("→");
+        _forwardButton = new Button(this);
+        _forwardButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 50);
+        _forwardButton.setText("→");
         if (_currentDrawingIndex == 0) {
-            backButton.setEnabled(false);
+            _backButton.setEnabled(false);
         }
         else if (_currentDrawingIndex < Gallery.getInstance().getDrawingCount() + 1){
-            forwardButton.setEnabled(true);
+            _forwardButton.setEnabled(true);
+            _deleteDrawingButton.setEnabled(true);
         }
         else {
-            backButton.setEnabled(true);
+            _backButton.setEnabled(true);
         }
-        final Button animationButton = new Button(this);
-        animationButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 50);
-        animationButton.setText("►");
-        //SplotchView colorButton = new SplotchView(this);
-        //colorButton.setOnSplotchSelectedListener(this);
 
-        final Button colorButton = new Button(this);
-        colorButton.setText("Color");
-        colorButton.setOnClickListener(this);
-        //colorButton.setSplotchColor(Color.BLACK);
+        _animationButton = new Button(this);
+        _animationButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 50);
+        _animationButton.setText("►");
+        //SplotchView _colorButton = new SplotchView(this);
+        //_colorButton.setOnSplotchSelectedListener(this);
 
-        final Button deleteDrawingButton = new Button(this);
-        deleteDrawingButton.setText("Delete Drawing");
+        _colorButton = new ImageButton(this);
+        _colorButton.setBackgroundColor(Color.BLACK);
+        _colorButton.setOnClickListener(this);
+        //_colorButton.setSplotchColor(Color.BLACK);
+
+        _deleteDrawingButton = new ImageButton(this);
+        _deleteDrawingButton.setImageResource(R.drawable.small_trash_icon);
 
         LinearLayout sideButtonLayout = new LinearLayout(this);
         sideButtonLayout.setOrientation(LinearLayout.VERTICAL);
         sideButtonLayout.setBackgroundColor(Color.BLUE);
-        sideButtonLayout.addView(drawingNumberView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
-        sideButtonLayout.addView(backButton,  new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
-        sideButtonLayout.addView(forwardButton,  new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
-        sideButtonLayout.addView(animationButton,  new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
-        sideButtonLayout.addView(colorButton,  new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
-        sideButtonLayout.addView(deleteDrawingButton,  new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
+        sideButtonLayout.addView(_backButton,  new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
+        sideButtonLayout.addView(_forwardButton,  new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
+        sideButtonLayout.addView(_animationButton,  new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
+        sideButtonLayout.addView(_colorButton,  new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
+        sideButtonLayout.addView(_deleteDrawingButton,  new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
 
         rootLayout.addView(sideButtonLayout, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1));
 
@@ -104,48 +110,65 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
         _drawingView.setBackgroundColor(Color.WHITE);
         _drawingView.setActiveColor(Color.BLACK);
 
+        convertToPathAndDraw(Gallery.getInstance().getDrawing(_currentDrawingIndex));
+
         rootLayout.addView(_drawingView, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 5));
 
         //_drawingView.manualInvalidate(); //TODO: somehow get the screen to show up on the first opening of the app
 
         _drawingView.setOnPathEndedListener(this);
 
-        forwardButton.setOnClickListener(new View.OnClickListener() {
+        _forwardButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Gallery.getInstance().addNewDrawing();
-                backButton.setEnabled(true);
-                convertToPathAndDraw(Gallery.getInstance().getDrawing(++_currentDrawingIndex));
-                drawingNumberView.setText("" + (_currentDrawingIndex + 1));
+                //TODO: don't add new drawing here...I think
+                //Gallery.getInstance().addNewDrawing();
+                _backButton.setEnabled(true);
+                _currentDrawingIndex++;
+                if (_currentDrawingIndex == Gallery.getInstance().getDrawingCount()) {// if the next drawing isn't drawn yet...
+                    _drawingView.clearCanvas();
+                    _forwardButton.setEnabled(false);
+                    _deleteDrawingButton.setEnabled(false);
+                }
+                else {
+                    convertToPathAndDraw(Gallery.getInstance().getDrawing(_currentDrawingIndex));
+                }
             }
         });
 
-        backButton.setOnClickListener(new View.OnClickListener() {
+        _backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                _forwardButton.setEnabled(true);
+                _deleteDrawingButton.setEnabled(true);
                 Drawing prevDrawing = Gallery.getInstance().getDrawing(--_currentDrawingIndex);
                 convertToPathAndDraw(prevDrawing);
                 if (_currentDrawingIndex == 0) {
-                    backButton.setEnabled(false);
+                    _backButton.setEnabled(false);
                 }
-                drawingNumberView.setText("" + (_currentDrawingIndex + 1));
             }
         });
 
-        deleteDrawingButton.setOnClickListener(new View.OnClickListener() {
+        _deleteDrawingButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (Gallery.getInstance().getDrawingCount() > 0) {
                     Gallery.getInstance().removeDrawing(_currentDrawingIndex++);
+                    saveToFile();
+                    _currentDrawingIndex--;
+                    if (_currentDrawingIndex == Gallery.getInstance().getDrawingCount()) {
+                        _drawingView.clearCanvas();
+                        _forwardButton.setEnabled(false);
+                        _deleteDrawingButton.setEnabled(false);
+                    }
+                    else {
+                        convertToPathAndDraw(Gallery.getInstance().getDrawing(_currentDrawingIndex));
+                    }
                 }
-                saveToFile();
-                //_drawingView.clearCanvas();
-                convertToPathAndDraw(Gallery.getInstance().getDrawing(_currentDrawingIndex));
-                drawingNumberView.setText("" + (_currentDrawingIndex + 1));
             }
         });
 
-        animationButton.setOnClickListener(new View.OnClickListener() {
+        _animationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 animate();
@@ -178,25 +201,23 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
             int strokeColor = stroke.getColor();
             for (int pointIndex = 0; pointIndex < stroke.getPointCount(); pointIndex++) {
                 Point point = stroke.getPoint(pointIndex);
+                int pixelX = (int) (point.x * Resources.getSystem().getDisplayMetrics().density);
+                int pixelY = (int) (point.y * Resources.getSystem().getDisplayMetrics().density);
                 if (pointIndex == 0) {
-                    linePath.moveTo(point.x, point.y);
+                    linePath.moveTo(pixelX, pixelY);
                 }
                 else {
-                    linePath.lineTo(point.x, point.y);
+                    linePath.lineTo(pixelX, pixelY);
                 }
             }
             pathList.add(linePath);
             colorList.add(strokeColor);
         }
         if (!_drawingAnimator.isRunning()) {
-            drawConvertedDrawing(pathList, colorList);
+            _drawingView.drawNewDrawing(pathList, colorList);
         }
         _animatorPathList = new ArrayList<>(pathList);
         _animatorColorList = new ArrayList<>(colorList);
-    }
-
-    private void drawConvertedDrawing(List<Path> pathList, List<Integer> colorList) {
-        _drawingView.drawNewDrawing(pathList, colorList);
     }
 
     @Override
@@ -213,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
             if (resultCode == RESULT_OK) {
                 int splotchColor = data.getIntExtra(SPLOTCH_COLOR, 0);
                 _drawingView.setActiveColor(splotchColor);
-                //_colorButton.setBackgroundColor(splotchColor);
+                _colorButton.setBackgroundColor(splotchColor);
             }
         }
 
@@ -228,19 +249,38 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
 
     @Override
     public void onPathEnded(List<PointF> points, int paintColor, Path linePath) {
+        //todo: create a new drawing here, and not on the forward button...
+        if (_currentDrawingIndex == Gallery.getInstance().getDrawingCount()) {
+            Gallery.getInstance().addNewDrawing();
+            _forwardButton.setEnabled(true);
+            _deleteDrawingButton.setEnabled(true);
+        }
         Log.i("Path Ended", "There are " + points.size() + " points in this line. Color is " + paintColor);
         Stroke stroke = new Stroke();
+        int density = getResources().getConfiguration().densityDpi;
+        int screenHeight = getResources().getConfiguration().screenHeightDp * density;
+        int screenWidth = getResources().getConfiguration().screenWidthDp * density;
+        int dpHeight = (int) (screenHeight / Resources.getSystem().getDisplayMetrics().density);
+        int dpWidth = (int) (screenWidth / Resources.getSystem().getDisplayMetrics().density);
+        Log.i("screen dimensions", "Height: " + dpHeight + ". Width: " + dpWidth + ". Density: " + density);
         for (PointF pathPoint : points) {
             edu.utah.cs4530.rusty.paintpalette.Point strokePoint = new Point();
             // TODO: convert coordinate  - should be in inches and stuff, not pixels
-            strokePoint.x = pathPoint.x;
-            strokePoint.y = pathPoint.y;
+
+
+            strokePoint.x = pathPoint.x / Resources.getSystem().getDisplayMetrics().density;
+            strokePoint.y = pathPoint.y / Resources.getSystem().getDisplayMetrics().density;
             stroke.addPoint(strokePoint);
+            Log.i("coordinates", "Coordinates are " + strokePoint.x + ", " + strokePoint.y);
         }
         stroke.setColor(paintColor);
         Gallery.getInstance().addStrokeToDrawing(_currentDrawingIndex, stroke);
-        _animatorPathList.add(linePath);
-        _animatorColorList.add(paintColor);
+        if (_animatorPathList != null) {
+            _animatorPathList.add(linePath);
+        }
+        if (_animatorColorList != null) {
+            _animatorColorList.add(paintColor);
+        }
         saveToFile();
     }
 
@@ -261,7 +301,26 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
         _drawingAnimator.addUpdateListener(this);
         _drawingView.clearCanvas();
         _drawingAnimator.start();
+        disableButtonsAndViews();
+        enableButtonsAndViews();
+    }
 
+    private void enableButtonsAndViews() {
+        _forwardButton.setEnabled(true);
+        _backButton.setEnabled(true);
+        _colorButton.setEnabled(true);
+        _deleteDrawingButton.setEnabled(true);
+        _drawingView.setEnabled(true);
+        _animationButton.setText("►");
+    }
+
+    private void disableButtonsAndViews() {
+        _forwardButton.setEnabled(false);
+        _backButton.setEnabled(false);
+        _colorButton.setEnabled(false);
+        _deleteDrawingButton.setEnabled(false);
+        _drawingView.setEnabled(false);
+        _animationButton.setText("◼");
     }
 
     @Override
@@ -270,12 +329,5 @@ public class MainActivity extends AppCompatActivity implements SplotchView.OnSpl
         Log.i("Animation", "Current Animation value: " + animationValue);
 
         _drawingView.drawNewPath(_animatorPathList.get(animationValue), _animatorColorList.get(animationValue));
-        //TODO: fix this. it's causing the animated picture to stay the picture always. see line 190 for reference
-        if (valueAnimator.isRunning()) {
-            _animatorMode = true;
-        }
-        else {
-            _animatorMode = false;
-        }
     }
 }
